@@ -207,7 +207,7 @@
                         <i class="fas fa-exclamation-triangle text-danger-500 text-2xl"></i>
                     </div>
                     <h3 class="text-lg font-semibold text-corporate-900 mb-2">Не удалось загрузить данные</h3>
-                    <p id="error-message" class="text-corporate-500 mb-6">Не удалось загрузить файл data.mdd. Убедитесь, что файл находится в той же директории.</p>
+                    <p id="error-message" class="text-corporate-500 mb-6">Не удалось загрузить файл data.txt. Убедитесь, что файл находится в той же директории.</p>
                     <button onclick="loadDashboard()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-corporate-900 text-white rounded-lg font-medium hover:bg-corporate-800 transition-colors">
                         <i class="fas fa-redo"></i>
                         Попробовать снова
@@ -368,23 +368,16 @@
         function parseMarkdownToProjects(markdown) {
             const projects = [];
             
-            // Нормализуем начало файла - добавляем \n перед первым #, если его нет
+            // Нормализуем начало файла
             const normalizedMarkdown = markdown.trimStart();
-            
-            console.log('Нормализованный markdown (первые 100):', normalizedMarkdown.substring(0, 100));
             
             // Разделяем по заголовкам первого уровня
             const projectBlocks = normalizedMarkdown.split(/(?=^# )/m).filter(block => block.trim());
             
-            console.log('Количество блоков после split:', projectBlocks.length);
-            
             for (const block of projectBlocks) {
-                console.log('Обрабатываю блок (первые 50):', block.substring(0, 50));
                 const project = parseProjectBlock(block);
                 if (project) {
                     projects.push(project);
-                } else {
-                    console.log('Блок не распознан как проект');
                 }
             }
             
@@ -393,13 +386,11 @@
         
         function parseProjectBlock(block) {
             const nameMatch = block.match(/^#\s+(.+)$/m);
-            console.log('nameMatch:', nameMatch ? nameMatch[1] : 'НЕТ');
             if (!nameMatch) return null;
             
             const name = nameMatch[1].trim();
             
             const metaMatch = block.match(/^>\s*Start:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*End:\s*(\d{4}-\d{2}-\d{2})/m);
-            console.log('metaMatch:', metaMatch ? `${metaMatch[1]} - ${metaMatch[2]}` : 'НЕТ');
             if (!metaMatch) return null;
             
             const startDate = metaMatch[1];
@@ -712,8 +703,8 @@
             document.getElementById('dashboard-content').classList.add('hidden');
             
             try {
-                // Пробуем загрузить data.mdd
-                const response = await fetch('./data.mdd', {
+                // Пробуем загрузить data.txt
+                const response = await fetch('./data.txt', {
                     cache: 'no-cache'
                 });
                 
@@ -723,24 +714,16 @@
                 
                 const markdown = await response.text();
                 
-                // ОТЛАДКА - выводим в консоль
-                console.log('=== ОТЛАДКА ===');
-                console.log('Длина файла:', markdown.length);
-                console.log('Первые 200 символов:', markdown.substring(0, 200));
-                console.log('Коды первых 10 символов:', [...markdown.substring(0, 10)].map(c => c.charCodeAt(0)));
-                
                 // Проверяем что это действительно markdown, а не HTML страница ошибки
-                if (markdown.trim().startsWith('<!DOCTYPE') || markdown.trim().startsWith('<html')) {
-                    throw new Error('Файл data.mdd не найден (получена HTML страница)');
+                const trimmedMarkdown = markdown.trim().toLowerCase();
+                if (trimmedMarkdown.startsWith('<!doctype') || trimmedMarkdown.startsWith('<html')) {
+                    throw new Error('Файл data.txt не найден в репозитории. Загрузите его на GitHub.');
                 }
                 
                 const projects = parseMarkdownToProjects(markdown);
                 
-                console.log('Найдено проектов:', projects.length);
-                
                 if (projects.length === 0) {
-                    // Показываем что получили
-                    throw new Error('Не найдено проектов. Первые 100 символов файла: ' + markdown.substring(0, 100));
+                    throw new Error('Не найдено проектов в файле data.txt. Проверьте формат файла.');
                 }
                 
                 renderDashboard(projects);
@@ -754,9 +737,9 @@
                 // Определяем тип ошибки для понятного сообщения
                 let errorMsg = error.message;
                 if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-                    errorMsg = 'Не удалось загрузить data.mdd. Если вы открываете файл локально (file://), используйте локальный сервер: python -m http.server 8000';
+                    errorMsg = 'Не удалось загрузить data.txt. Если вы открываете файл локально (file://), используйте локальный сервер: python -m http.server 8000';
                 } else if (error.message.includes('404')) {
-                    errorMsg = 'Файл data.mdd не найден. Убедитесь, что он находится в той же папке, что и index.html';
+                    errorMsg = 'Файл data.txt не найден. Убедитесь, что он находится в той же папке, что и index.html';
                 }
                 
                 document.getElementById('error-message').textContent = errorMsg;

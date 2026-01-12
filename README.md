@@ -17,7 +17,7 @@
 
 ## Как обновлять проекты
 
-Редактируйте файл `data.mdd` в формате Markdown:
+Редактируйте файл `data.txt` в формате Markdown:
 
 ```markdown
 # Название проекта
@@ -43,7 +43,7 @@
 
 ## Публикация на GitHub Pages
 
-1. Загрузите файлы `index.html` и `data.mddd` в репозиторий
+1. Загрузите файлы `index.html` и `data.txtd` в репозиторий
 2. Settings → Pages → Source: `main` / `root`
 3. Save
 
