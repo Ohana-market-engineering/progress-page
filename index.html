@@ -704,7 +704,10 @@
             
             try {
                 // Пробуем загрузить data.txt
-                const response = await fetch('./data.txt', {
+                const basePath = window.location.pathname.endsWith('/')
+                    ? window.location.pathname
+                    : window.location.pathname + '/';
+                const response = await fetch(basePath + 'data.txt', {
                     cache: 'no-cache'
                 });
                 
