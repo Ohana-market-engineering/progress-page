@@ -371,13 +371,20 @@
             // Нормализуем начало файла - добавляем \n перед первым #, если его нет
             const normalizedMarkdown = markdown.trimStart();
             
+            console.log('Нормализованный markdown (первые 100):', normalizedMarkdown.substring(0, 100));
+            
             // Разделяем по заголовкам первого уровня
             const projectBlocks = normalizedMarkdown.split(/(?=^# )/m).filter(block => block.trim());
             
+            console.log('Количество блоков после split:', projectBlocks.length);
+            
             for (const block of projectBlocks) {
+                console.log('Обрабатываю блок (первые 50):', block.substring(0, 50));
                 const project = parseProjectBlock(block);
                 if (project) {
                     projects.push(project);
+                } else {
+                    console.log('Блок не распознан как проект');
                 }
             }
             
@@ -386,11 +393,13 @@
         
         function parseProjectBlock(block) {
             const nameMatch = block.match(/^#\s+(.+)$/m);
+            console.log('nameMatch:', nameMatch ? nameMatch[1] : 'НЕТ');
             if (!nameMatch) return null;
             
             const name = nameMatch[1].trim();
             
             const metaMatch = block.match(/^>\s*Start:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*End:\s*(\d{4}-\d{2}-\d{2})/m);
+            console.log('metaMatch:', metaMatch ? `${metaMatch[1]} - ${metaMatch[2]}` : 'НЕТ');
             if (!metaMatch) return null;
             
             const startDate = metaMatch[1];
@@ -714,6 +723,12 @@
                 
                 const markdown = await response.text();
                 
+                // ОТЛАДКА - выводим в консоль
+                console.log('=== ОТЛАДКА ===');
+                console.log('Длина файла:', markdown.length);
+                console.log('Первые 200 символов:', markdown.substring(0, 200));
+                console.log('Коды первых 10 символов:', [...markdown.substring(0, 10)].map(c => c.charCodeAt(0)));
+                
                 // Проверяем что это действительно markdown, а не HTML страница ошибки
                 if (markdown.trim().startsWith('<!DOCTYPE') || markdown.trim().startsWith('<html')) {
                     throw new Error('Файл data.mdd не найден (получена HTML страница)');
@@ -721,8 +736,11 @@
                 
                 const projects = parseMarkdownToProjects(markdown);
                 
+                console.log('Найдено проектов:', projects.length);
+                
                 if (projects.length === 0) {
-                    throw new Error('Не найдено проектов в файле data.mdd. Проверьте формат файла.');
+                    // Показываем что получили
+                    throw new Error('Не найдено проектов. Первые 100 символов файла: ' + markdown.substring(0, 100));
                 }
                 
                 renderDashboard(projects);
