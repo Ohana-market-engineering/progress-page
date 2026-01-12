@@ -3,59 +3,733 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <base href="/dash/">
-    <title>DH | В разработке...</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/animations.css">
+    <title>Дорожная карта проектов</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        'corporate': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        'success': {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        },
+                        'info': {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                        },
+                        'warning': {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        },
+                        'danger': {
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                            500: '#ef4444',
+                            600: '#dc2626',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        * { box-sizing: border-box; }
+        
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        
+        .bg-pattern {
+            background-image: 
+                linear-gradient(rgba(148, 163, 184, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+        
+        .project-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .project-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .progress-bar {
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .pulse-active {
+            animation: pulse-subtle 2s ease-in-out infinite;
+        }
+        
+        .milestone-table {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            opacity: 0;
+        }
+        
+        .milestone-table.expanded {
+            max-height: 600px;
+            opacity: 1;
+        }
+        
+        .chevron-icon {
+            transition: transform 0.3s ease;
+        }
+        
+        .chevron-icon.rotated {
+            transform: rotate(180deg);
+        }
+        
+        .kpi-card {
+            transition: all 0.2s ease;
+        }
+        
+        .kpi-card:hover {
+            background: white;
+            box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+        
+        .animate-delay-1 { animation-delay: 0.1s; }
+        .animate-delay-2 { animation-delay: 0.2s; }
+        .animate-delay-3 { animation-delay: 0.3s; }
+        .animate-delay-4 { animation-delay: 0.4s; }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <div class="glitch-wrapper">
-            <h1 class="glitch" data-text="СКОРО БУДЕТ">СКОРО БУДЕТ</h1>
-        </div>
-
-        <div class="progress-container">
-            <div class="progress-bar">
-                <div class="progress-fill" id="progress"></div>
+<body class="bg-pattern font-sans text-corporate-800 antialiased">
+    
+    <div class="min-h-screen flex flex-col">
+        
+        <!-- Шапка -->
+        <header class="bg-white/80 backdrop-blur-sm border-b border-corporate-200 sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-corporate-900 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-gantt text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-semibold text-corporate-900 tracking-tight">Дорожная карта</h1>
+                            <p class="text-xs text-corporate-500 font-medium">Статус проектов</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="hidden sm:flex items-center gap-2 text-sm text-corporate-600 bg-corporate-50 px-4 py-2 rounded-full">
+                            <i class="far fa-calendar-alt"></i>
+                            <span id="current-date" class="font-medium"></span>
+                        </div>
+                        <button onclick="loadDashboard()" class="p-2 hover:bg-corporate-100 rounded-lg transition-colors" title="Обновить">
+                            <i class="fas fa-sync-alt text-corporate-500"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
-            <p class="progress-text">Загрузка: <span id="percent">0</span>%</p>
-        </div>
-
-        <div class="meme-section">
-            <p class="quote" id="quote">"Это займёт всего 5 минут..."</p>
-            <p class="author">— Каждый разработчик</p>
-        </div>
-
-        <div class="status-panel">
-            <div class="status-item">
-                <span class="status-dot blink"></span>
-                <span>Кофе варится/O\</span>
+        </header>
+        
+        <!-- Основной контент -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+            
+            <!-- Загрузка -->
+            <div id="loading-state" class="flex flex-col items-center justify-center py-24">
+                <div class="w-12 h-12 border-4 border-corporate-200 border-t-corporate-600 rounded-full spinner"></div>
+                <p class="mt-4 text-corporate-500 font-medium">Загрузка проектов...</p>
             </div>
-            <div class="status-item">
-                <span class="status-dot active"></span>
-                <span>Stack Overflow открыт.</span>
+            
+            <!-- Ошибка -->
+            <div id="error-state" class="hidden">
+                <div class="bg-white rounded-2xl border border-danger-100 p-8 text-center max-w-lg mx-auto">
+                    <div class="w-16 h-16 bg-danger-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-exclamation-triangle text-danger-500 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-corporate-900 mb-2">Не удалось загрузить данные</h3>
+                    <p id="error-message" class="text-corporate-500 mb-6">Не удалось загрузить файл data.md. Убедитесь, что файл находится в той же директории.</p>
+                    <button onclick="loadDashboard()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-corporate-900 text-white rounded-lg font-medium hover:bg-corporate-800 transition-colors">
+                        <i class="fas fa-redo"></i>
+                        Попробовать снова
+                    </button>
+                </div>
             </div>
-            <div class="status-item">
-                <span class="status-dot"></span>
-                <span>Баги исправлены. фывфывыфвф</span>
+            
+            <!-- Контент дашборда -->
+            <div id="dashboard-content" class="hidden">
+                
+                <!-- KPI карточки -->
+                <section class="mb-8">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        
+                        <div class="kpi-card bg-white/70 backdrop-blur-sm rounded-xl p-5 border border-corporate-100">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="text-xs font-semibold text-corporate-400 uppercase tracking-wider mb-1">Всего проектов</p>
+                                    <p id="kpi-total" class="text-3xl font-bold text-corporate-900">0</p>
+                                </div>
+                                <div class="w-10 h-10 bg-corporate-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-folder text-corporate-500"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card bg-white/70 backdrop-blur-sm rounded-xl p-5 border border-corporate-100">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="text-xs font-semibold text-corporate-400 uppercase tracking-wider mb-1">Активных</p>
+                                    <p id="kpi-active" class="text-3xl font-bold text-success-600">0</p>
+                                </div>
+                                <div class="w-10 h-10 bg-success-50 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-play-circle text-success-500"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card bg-white/70 backdrop-blur-sm rounded-xl p-5 border border-corporate-100">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="text-xs font-semibold text-corporate-400 uppercase tracking-wider mb-1">Завершено</p>
+                                    <p id="kpi-completed" class="text-3xl font-bold text-info-600">0</p>
+                                </div>
+                                <div class="w-10 h-10 bg-info-50 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-check-circle text-info-500"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card bg-white/70 backdrop-blur-sm rounded-xl p-5 border border-corporate-100">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="text-xs font-semibold text-corporate-400 uppercase tracking-wider mb-1">Средний прогресс</p>
+                                    <p id="kpi-success" class="text-3xl font-bold text-corporate-900">0%</p>
+                                </div>
+                                <div class="w-10 h-10 bg-warning-50 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-chart-line text-warning-500"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </section>
+                
+                <!-- Фильтры -->
+                <section class="mb-6">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="filterProjects('all')" data-filter="all" class="filter-btn active px-4 py-2 rounded-lg text-sm font-medium transition-all bg-corporate-900 text-white">
+                            Все проекты
+                        </button>
+                        <button onclick="filterProjects('active')" data-filter="active" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all bg-white text-corporate-600 border border-corporate-200 hover:border-corporate-300">
+                            <i class="fas fa-circle text-success-500 text-xs mr-1.5"></i>Активные
+                        </button>
+                        <button onclick="filterProjects('queue')" data-filter="queue" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all bg-white text-corporate-600 border border-corporate-200 hover:border-corporate-300">
+                            <i class="fas fa-circle text-corporate-400 text-xs mr-1.5"></i>В очереди
+                        </button>
+                        <button onclick="filterProjects('completed')" data-filter="completed" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all bg-white text-corporate-600 border border-corporate-200 hover:border-corporate-300">
+                            <i class="fas fa-circle text-info-500 text-xs mr-1.5"></i>Завершённые
+                        </button>
+                        <button onclick="filterProjects('delayed')" data-filter="delayed" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all bg-white text-corporate-600 border border-corporate-200 hover:border-corporate-300">
+                            <i class="fas fa-circle text-danger-500 text-xs mr-1.5"></i>Просроченные
+                        </button>
+                    </div>
+                </section>
+                
+                <!-- Сетка проектов -->
+                <section id="projects-grid" class="grid gap-5 md:grid-cols-2 xl:grid-cols-3"></section>
+                
+                <!-- Пустое состояние -->
+                <div id="empty-state" class="hidden text-center py-16">
+                    <div class="w-16 h-16 bg-corporate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-inbox text-corporate-400 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-corporate-700 mb-2">Проекты не найдены</h3>
+                    <p class="text-corporate-500">Нет проектов, соответствующих выбранному фильтру.</p>
+                </div>
+                
             </div>
-            <div class="status-item">
-                <span class="status-dot"></span>
-                <span>Дедлайн соблюдён</span>
+            
+        </main>
+        
+        <!-- Подвал -->
+        <footer class="border-t border-corporate-200 bg-white/50 mt-auto">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex items-center justify-between text-sm text-corporate-500">
+                    <p>© 2025 Дорожная карта проектов</p>
+                    <p class="flex items-center gap-1">
+                        <i class="fas fa-code text-corporate-400"></i>
+                        Сделано с заботой
+                    </p>
+                </div>
             </div>
-        </div>
-
-        <div class="commit-log">
-            <h3>Последние коммиты:</h3>
-            <ul id="commits"></ul>
-        </div>
-
-        <footer>
-            <p>© 2025 | Сделано с <span class="heart">❤</span> и массой прокрастинации</p>
         </footer>
+        
     </div>
-
-    <script src="js/app.js"></script>
-    <script src="js/quotes.js"></script>
+    
+    <script>
+        // ================================
+        // Глобальное состояние
+        // ================================
+        let allProjects = [];
+        let currentFilter = 'all';
+        
+        // ================================
+        // Утилиты для дат
+        // ================================
+        const MONTHS_RU = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+        const MONTHS_FULL_RU = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+        const WEEKDAYS_RU = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+        
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return `${date.getDate()} ${MONTHS_RU[date.getMonth()]} ${date.getFullYear()}`;
+        }
+        
+        function formatDateShort(dateStr) {
+            const date = new Date(dateStr);
+            return `${date.getDate()} ${MONTHS_RU[date.getMonth()]}`;
+        }
+        
+        function getCurrentDate() {
+            return new Date().toISOString().split('T')[0];
+        }
+        
+        function displayCurrentDate() {
+            const now = new Date();
+            const weekday = WEEKDAYS_RU[now.getDay()];
+            const day = now.getDate();
+            const month = MONTHS_FULL_RU[now.getMonth()];
+            const year = now.getFullYear();
+            document.getElementById('current-date').textContent = `${weekday}, ${day} ${month} ${year}`;
+        }
+        
+        // ================================
+        // Парсер Markdown
+        // ================================
+        function parseMarkdownToProjects(markdown) {
+            const projects = [];
+            const projectBlocks = markdown.split(/\n(?=# )/).filter(block => block.trim());
+            
+            for (const block of projectBlocks) {
+                const project = parseProjectBlock(block);
+                if (project) {
+                    projects.push(project);
+                }
+            }
+            
+            return projects;
+        }
+        
+        function parseProjectBlock(block) {
+            const nameMatch = block.match(/^#\s+(.+)$/m);
+            if (!nameMatch) return null;
+            
+            const name = nameMatch[1].trim();
+            
+            const metaMatch = block.match(/^>\s*Start:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*End:\s*(\d{4}-\d{2}-\d{2})/m);
+            if (!metaMatch) return null;
+            
+            const startDate = metaMatch[1];
+            const endDate = metaMatch[2];
+            
+            const milestones = parseMilestoneTable(block);
+            
+            const doneCount = milestones.filter(m => m.status.toLowerCase().includes('done')).length;
+            const progress = milestones.length > 0 ? Math.round((doneCount / milestones.length) * 100) : 0;
+            
+            const status = calculateProjectStatus(startDate, endDate, progress);
+            
+            const nextMilestone = milestones.find(m => !m.status.toLowerCase().includes('done'));
+            
+            return {
+                name,
+                startDate,
+                endDate,
+                milestones,
+                progress,
+                status,
+                nextMilestone,
+                doneCount,
+                totalMilestones: milestones.length
+            };
+        }
+        
+        function parseMilestoneTable(block) {
+            const milestones = [];
+            const lines = block.split('\n');
+            
+            let inTable = false;
+            let headerPassed = false;
+            
+            for (const line of lines) {
+                const trimmed = line.trim();
+                
+                if (trimmed.startsWith('|') && (trimmed.toLowerCase().includes('milestone') || trimmed.toLowerCase().includes('этап'))) {
+                    inTable = true;
+                    continue;
+                }
+                
+                if (inTable && trimmed.match(/^\|[\s:-]+\|/)) {
+                    headerPassed = true;
+                    continue;
+                }
+                
+                if (inTable && headerPassed && trimmed.startsWith('|')) {
+                    const cells = trimmed.split('|').map(c => c.trim()).filter(c => c);
+                    if (cells.length >= 3) {
+                        milestones.push({
+                            name: cells[0],
+                            date: cells[1],
+                            status: cells[2]
+                        });
+                    }
+                }
+                
+                if (inTable && headerPassed && !trimmed.startsWith('|') && trimmed !== '') {
+                    break;
+                }
+            }
+            
+            return milestones;
+        }
+        
+        function calculateProjectStatus(startDate, endDate, progress) {
+            const today = getCurrentDate();
+            
+            if (progress === 100) return 'completed';
+            if (startDate > today) return 'queue';
+            if (today > endDate && progress < 100) return 'delayed';
+            if (today >= startDate && today <= endDate) return 'active';
+            
+            return 'active';
+        }
+        
+        // ================================
+        // Рендеринг UI
+        // ================================
+        function getStatusConfig(status) {
+            const configs = {
+                active: {
+                    label: 'Активный',
+                    bgClass: 'bg-success-50',
+                    textClass: 'text-success-700',
+                    borderClass: 'border-success-200',
+                    dotClass: 'bg-success-500',
+                    progressClass: 'bg-success-500'
+                },
+                completed: {
+                    label: 'Завершён',
+                    bgClass: 'bg-info-50',
+                    textClass: 'text-info-700',
+                    borderClass: 'border-info-200',
+                    dotClass: 'bg-info-500',
+                    progressClass: 'bg-info-500'
+                },
+                queue: {
+                    label: 'В очереди',
+                    bgClass: 'bg-corporate-100',
+                    textClass: 'text-corporate-600',
+                    borderClass: 'border-corporate-200',
+                    dotClass: 'bg-corporate-400',
+                    progressClass: 'bg-corporate-400'
+                },
+                delayed: {
+                    label: 'Просрочен',
+                    bgClass: 'bg-danger-50',
+                    textClass: 'text-danger-700',
+                    borderClass: 'border-danger-200',
+                    dotClass: 'bg-danger-500',
+                    progressClass: 'bg-danger-500'
+                }
+            };
+            return configs[status] || configs.active;
+        }
+        
+        function renderProjectCard(project, index) {
+            const config = getStatusConfig(project.status);
+            const cardId = `project-${index}`;
+            
+            const nextMilestoneHtml = project.nextMilestone 
+                ? `<div class="flex items-center gap-2">
+                        <i class="fas fa-arrow-right text-corporate-400 text-xs"></i>
+                        <span class="font-medium text-corporate-700">${project.nextMilestone.name}</span>
+                        <span class="text-corporate-400">·</span>
+                        <span class="text-corporate-500 text-xs">${formatDateShort(project.nextMilestone.date)}</span>
+                   </div>`
+                : `<div class="flex items-center gap-2 text-success-600">
+                        <i class="fas fa-check-circle"></i>
+                        <span class="font-medium">Все этапы завершены</span>
+                   </div>`;
+            
+            const milestonesTableHtml = project.milestones.map(m => {
+                const isDone = m.status.toLowerCase().includes('done');
+                const isInProgress = m.status.toLowerCase().includes('progress');
+                
+                let statusBadge;
+                if (isDone) {
+                    statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-success-50 text-success-700">
+                                    <i class="fas fa-check text-[10px]"></i> Готово
+                                  </span>`;
+                } else if (isInProgress) {
+                    statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-warning-50 text-warning-700">
+                                    <i class="fas fa-spinner text-[10px]"></i> В работе
+                                  </span>`;
+                } else {
+                    statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-corporate-100 text-corporate-600">
+                                    <i class="far fa-circle text-[10px]"></i> Ожидает
+                                  </span>`;
+                }
+                
+                return `<tr class="border-b border-corporate-100 last:border-0">
+                            <td class="py-2.5 pr-4">
+                                <span class="${isDone ? 'text-corporate-400 line-through' : 'text-corporate-700'}">${m.name}</span>
+                            </td>
+                            <td class="py-2.5 pr-4 text-xs text-corporate-500">${formatDateShort(m.date)}</td>
+                            <td class="py-2.5">${statusBadge}</td>
+                        </tr>`;
+            }).join('');
+            
+            return `
+                <article class="project-card bg-white rounded-2xl border border-corporate-100 overflow-hidden opacity-0 animate-fade-in animate-delay-${(index % 4) + 1}" data-status="${project.status}">
+                    
+                    <div class="p-5 pb-4">
+                        <div class="flex items-start justify-between gap-3 mb-4">
+                            <h3 class="text-lg font-semibold text-corporate-900 leading-tight">${project.name}</h3>
+                            <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${config.bgClass} ${config.textClass} border ${config.borderClass}">
+                                <span class="w-1.5 h-1.5 rounded-full ${config.dotClass} ${project.status === 'active' ? 'pulse-active' : ''}"></span>
+                                ${config.label}
+                            </span>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 text-sm text-corporate-500 mb-4">
+                            <div class="flex items-center gap-1.5">
+                                <i class="far fa-calendar text-corporate-400"></i>
+                                <span class="text-xs">${formatDate(project.startDate)}</span>
+                            </div>
+                            <i class="fas fa-arrow-right text-corporate-300 text-xs"></i>
+                            <span class="text-xs">${formatDate(project.endDate)}</span>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-xs font-medium text-corporate-500">Прогресс</span>
+                                <span class="text-sm font-bold ${config.textClass}">${project.progress}%</span>
+                            </div>
+                            <div class="h-2 bg-corporate-100 rounded-full overflow-hidden">
+                                <div class="progress-bar h-full rounded-full ${config.progressClass}" style="width: ${project.progress}%"></div>
+                            </div>
+                            <div class="flex justify-between mt-1">
+                                <span class="text-xs text-corporate-400">${project.doneCount} из ${project.totalMilestones} этапов</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-corporate-50 rounded-lg p-3 text-sm">
+                            <p class="text-xs text-corporate-400 uppercase tracking-wider font-semibold mb-1.5">
+                                ${project.nextMilestone ? 'Следующий этап' : 'Статус'}
+                            </p>
+                            ${nextMilestoneHtml}
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-corporate-100">
+                        <button onclick="toggleMilestones('${cardId}')" class="w-full px-5 py-3 flex items-center justify-between text-sm font-medium text-corporate-600 hover:bg-corporate-50 transition-colors">
+                            <span class="flex items-center gap-2">
+                                <i class="fas fa-list-check text-corporate-400"></i>
+                                Все этапы
+                            </span>
+                            <i id="${cardId}-chevron" class="fas fa-chevron-down text-corporate-400 chevron-icon"></i>
+                        </button>
+                        
+                        <div id="${cardId}-table" class="milestone-table px-5">
+                            <table class="w-full text-sm mb-4">
+                                <thead>
+                                    <tr class="border-b border-corporate-200">
+                                        <th class="py-2 text-left text-xs font-semibold text-corporate-400 uppercase tracking-wider">Этап</th>
+                                        <th class="py-2 text-left text-xs font-semibold text-corporate-400 uppercase tracking-wider">Дата</th>
+                                        <th class="py-2 text-left text-xs font-semibold text-corporate-400 uppercase tracking-wider">Статус</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${milestonesTableHtml}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                </article>
+            `;
+        }
+        
+        function renderDashboard(projects) {
+            const statusOrder = { active: 0, delayed: 1, queue: 2, completed: 3 };
+            const sortedProjects = [...projects].sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
+            
+            allProjects = sortedProjects;
+            
+            updateKPIs(projects);
+            renderFilteredProjects('all');
+            
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('dashboard-content').classList.remove('hidden');
+        }
+        
+        function updateKPIs(projects) {
+            const total = projects.length;
+            const active = projects.filter(p => p.status === 'active').length;
+            const completed = projects.filter(p => p.status === 'completed').length;
+            
+            const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'queue');
+            const avgProgress = activeProjects.length > 0
+                ? Math.round(activeProjects.reduce((sum, p) => sum + p.progress, 0) / activeProjects.length)
+                : 0;
+            
+            document.getElementById('kpi-total').textContent = total;
+            document.getElementById('kpi-active').textContent = active;
+            document.getElementById('kpi-completed').textContent = completed;
+            document.getElementById('kpi-success').textContent = `${avgProgress}%`;
+        }
+        
+        function renderFilteredProjects(filter) {
+            currentFilter = filter;
+            
+            const filtered = filter === 'all' 
+                ? allProjects 
+                : allProjects.filter(p => p.status === filter);
+            
+            const grid = document.getElementById('projects-grid');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                grid.innerHTML = filtered.map((p, i) => renderProjectCard(p, i)).join('');
+            }
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.filter === filter) {
+                    btn.classList.remove('bg-white', 'text-corporate-600', 'border', 'border-corporate-200', 'hover:border-corporate-300');
+                    btn.classList.add('bg-corporate-900', 'text-white');
+                } else {
+                    btn.classList.add('bg-white', 'text-corporate-600', 'border', 'border-corporate-200', 'hover:border-corporate-300');
+                    btn.classList.remove('bg-corporate-900', 'text-white');
+                }
+            });
+        }
+        
+        function filterProjects(filter) {
+            renderFilteredProjects(filter);
+        }
+        
+        function toggleMilestones(cardId) {
+            const table = document.getElementById(`${cardId}-table`);
+            const chevron = document.getElementById(`${cardId}-chevron`);
+            
+            table.classList.toggle('expanded');
+            chevron.classList.toggle('rotated');
+        }
+        
+        // ================================
+        // Загрузка данных
+        // ================================
+        async function loadDashboard() {
+            document.getElementById('loading-state').classList.remove('hidden');
+            document.getElementById('error-state').classList.add('hidden');
+            document.getElementById('dashboard-content').classList.add('hidden');
+            
+            try {
+                const response = await fetch('data.md');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const markdown = await response.text();
+                const projects = parseMarkdownToProjects(markdown);
+                
+                if (projects.length === 0) {
+                    throw new Error('Не найдено проектов в файле data.md. Проверьте формат файла.');
+                }
+                
+                renderDashboard(projects);
+                
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('error-state').classList.remove('hidden');
+                document.getElementById('error-message').textContent = error.message || 'Не удалось загрузить файл data.md.';
+            }
+        }
+        
+        // ================================
+        // Инициализация
+        // ================================
+        document.addEventListener('DOMContentLoaded', () => {
+            displayCurrentDate();
+            loadDashboard();
+        });
+    </script>
+    
 </body>
 </html>
