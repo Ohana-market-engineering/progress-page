@@ -367,7 +367,12 @@
         // ================================
         function parseMarkdownToProjects(markdown) {
             const projects = [];
-            const projectBlocks = markdown.split(/\n(?=# )/).filter(block => block.trim());
+            
+            // Нормализуем начало файла - добавляем \n перед первым #, если его нет
+            const normalizedMarkdown = markdown.trimStart();
+            
+            // Разделяем по заголовкам первого уровня
+            const projectBlocks = normalizedMarkdown.split(/(?=^# )/m).filter(block => block.trim());
             
             for (const block of projectBlocks) {
                 const project = parseProjectBlock(block);
