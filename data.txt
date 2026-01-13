@@ -4,7 +4,7 @@
 | Milestone | Date | Status |
 | :--- | :--- | :--- |
 | VPS + Docker + PostgreSQL | 2026-01-10 | Done |
-| Nginx + SSL + Timeweb AI | 2026-01-17 | In Progress |
+| Nginx + SSL + Timeweb AI | 2026-01-17 | Done |
 | Инфраструктура готова | 2026-01-20 | Pending |
 | Open WebUI + базовая конфигурация | 2026-01-28 | Pending |
 | Ролевая модель + Pipelines | 2026-02-05 | Pending |
