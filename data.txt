@@ -24,44 +24,44 @@
 | Tools для поиска | 2026-03-27 | Pending |
 | Тестирование с пользователями | 2026-03-31 | Pending |
 
-# Reputation (Управление репутацией)
+# Content Factory (Контент-фабрика)
 > Start: 2026-01-12 | End: 2026-04-15
 
 | Milestone | Date | Status |
 | :--- | :--- | :--- |
-| Интеграция Wildberries API | 2026-03-20 | In Progress |
-| Интеграция Ozon API | 2026-03-25 | Pending |
-| Polling-сервис (сбор отзывов) | 2026-03-30 | Pending |
-| AI-генерация ответов | 2026-04-05 | Pending |
-| Vision-анализ фото | 2026-04-08 | Pending |
-| Pipeline @Adolf_Reviews | 2026-04-11 | Pending |
-| Tools для работы с отзывами | 2026-04-13 | Pending |
+| Шаблоны карточек товаров | 2026-03-20 | In Progress |
+| Генерация описаний (GPT-5 mini) | 2026-03-26 | Pending |
+| SEO-оптимизация текстов | 2026-04-01 | Pending |
+| Генерация Rich-контента | 2026-04-06 | Pending |
+| Pipeline @Adolf_Content | 2026-04-10 | Pending |
+| Tools для контента | 2026-04-13 | Pending |
 | Тестирование | 2026-04-15 | Pending |
 
-# Watcher (Мониторинг цен)
+# CFO (Финансовый директор)
 > Start: 2026-04-01 | End: 2026-04-30
 
 | Milestone | Date | Status |
 | :--- | :--- | :--- |
-| Серверная часть (API, очередь) | 2026-04-07 | Pending |
-| Агент Playwright + Browser Cloud | 2026-04-14 | Pending |
-| Парсинг WB/Ozon/YM | 2026-04-18 | Pending |
-| Сохранение истории цен | 2026-04-22 | Pending |
-| Pipeline @Adolf_Watcher | 2026-04-25 | Pending |
-| Tools для мониторинга | 2026-04-28 | Pending |
+| Парсинг финансовых отчётов | 2026-04-07 | Pending |
+| Mapping Barcode → Cost Price | 2026-04-12 | Pending |
+| P&L расчёт по товарам | 2026-04-17 | Pending |
+| ABC-анализ ассортимента | 2026-04-21 | Pending |
+| AI Insights (Claude Opus) | 2026-04-25 | Pending |
+| Pipeline @Adolf_CFO | 2026-04-28 | Pending |
 | Тестирование | 2026-04-30 | Pending |
 
-# Content Factory (Контент-фабрика)
+# Reputation (Управление репутацией)
 > Start: 2026-05-01 | End: 2026-05-31
 
 | Milestone | Date | Status |
 | :--- | :--- | :--- |
-| Шаблоны карточек товаров | 2026-05-06 | Pending |
-| Генерация описаний (GPT-5 mini) | 2026-05-12 | Pending |
-| SEO-оптимизация текстов | 2026-05-18 | Pending |
-| Генерация Rich-контента | 2026-05-23 | Pending |
-| Pipeline @Adolf_Content | 2026-05-27 | Pending |
-| Tools для контента | 2026-05-29 | Pending |
+| Интеграция Wildberries API | 2026-05-05 | In Progress |
+| Интеграция Ozon API | 2026-05-09 | Pending |
+| Polling-сервис (сбор отзывов) | 2026-05-14 | Pending |
+| AI-генерация ответов | 2026-05-19 | Pending |
+| Vision-анализ фото | 2026-05-22 | Pending |
+| Pipeline @Adolf_Reviews | 2026-05-26 | Pending |
+| Tools для работы с отзывами | 2026-05-28 | Pending |
 | Тестирование | 2026-05-31 | Pending |
 
 # Marketing (Управление рекламой)
@@ -90,17 +90,17 @@
 | Tools для анализа | 2026-06-27 | Pending |
 | Тестирование | 2026-06-30 | Pending |
 
-# CFO (Финансовый директор)
+# Watcher (Мониторинг цен)
 > Start: 2026-07-01 | End: 2026-07-31
 
 | Milestone | Date | Status |
 | :--- | :--- | :--- |
-| Парсинг финансовых отчётов | 2026-07-08 | Pending |
-| Mapping Barcode → Cost Price | 2026-07-14 | Pending |
-| P&L расчёт по товарам | 2026-07-19 | Pending |
-| ABC-анализ ассортимента | 2026-07-23 | Pending |
-| AI Insights (Claude Opus) | 2026-07-27 | Pending |
-| Pipeline @Adolf_CFO | 2026-07-29 | Pending |
+| Серверная часть (API, очередь) | 2026-07-07 | Pending |
+| Агент Playwright + Browser Cloud | 2026-07-13 | Pending |
+| Парсинг WB/Ozon/YM | 2026-07-18 | Pending |
+| Сохранение истории цен | 2026-07-22 | Pending |
+| Pipeline @Adolf_Watcher | 2026-07-26 | Pending |
+| Tools для мониторинга | 2026-07-29 | Pending |
 | Тестирование | 2026-07-31 | Pending |
 
 # Lex (Правовой мониторинг)
