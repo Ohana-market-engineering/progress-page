@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактор проектов</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        'corporate': {
+                            50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0',
+                            300: '#cbd5e1', 400: '#94a3b8', 500: '#64748b',
+                            600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a',
+                        },
+                        'success': { 50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981', 600: '#059669', 700: '#047857' },
+                        'info': { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb' },
+                        'warning': { 50: '#fffbeb', 100: '#fef3c7', 500: '#f59e0b', 600: '#d97706' },
+                        'danger': { 50: '#fef2f2', 100: '#fee2e2', 500: '#ef4444', 600: '#dc2626' }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        .project-card { transition: all 0.2s ease; }
+        .project-card:hover { box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); }
+        .milestone-row { transition: background 0.15s ease; }
+        .milestone-row:hover { background: #f8fafc; }
+        .drag-handle { cursor: grab; }
+        .drag-handle:active { cursor: grabbing; }
+        .modal-overlay {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.6;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+        }
+        .status-done { background: #ecfdf5; color: #047857; border-color: #d1fae5; }
+        .status-progress { background: #fffbeb; color: #b45309; border-color: #fef3c7; }
+        .status-pending { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+        textarea:focus, input:focus, select:focus {
+            outline: none;
+            ring: 2px;
+            ring-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="font-sans text-corporate-800 antialiased">
+    
+    <div class="min-h-screen flex flex-col">
+        
+        <!-- Шапка -->
+        <header class="bg-white/80 backdrop-blur-sm border-b border-corporate-200 sticky top-0 z-50">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-info-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-pen-to-square text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-semibold text-corporate-900">Редактор проектов</h1>
+                            <p class="text-xs text-corporate-500">Управление data.txt</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="loadFromFile()" class="px-4 py-2 text-sm font-medium text-corporate-600 bg-white border border-corporate-200 rounded-lg hover:bg-corporate-50 transition-colors">
+                            <i class="fas fa-folder-open mr-2"></i>Загрузить
+                        </button>
+                        <button onclick="downloadFile()" class="px-4 py-2 text-sm font-medium text-white bg-info-600 rounded-lg hover:bg-info-700 transition-colors">
+                            <i class="fas fa-download mr-2"></i>Скачать data.txt
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Основной контент -->
+        <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+            
+            <!-- Панель действий -->
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-4">
+                    <span id="project-count" class="text-sm text-corporate-500">0 проектов</span>
+                </div>
+                <button onclick="addProject()" class="px-4 py-2 text-sm font-medium text-white bg-success-600 rounded-lg hover:bg-success-700 transition-colors">
+                    <i class="fas fa-plus mr-2"></i>Добавить проект
+                </button>
+            </div>
+            
+            <!-- Список проектов -->
+            <div id="projects-container" class="space-y-6">
+                <!-- Проекты будут здесь -->
+            </div>
+            
+            <!-- Пустое состояние -->
+            <div id="empty-state" class="hidden text-center py-16">
+                <div class="w-20 h-20 bg-corporate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-folder-plus text-corporate-400 text-3xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-corporate-700 mb-2">Нет проектов</h3>
+                <p class="text-corporate-500 mb-6">Добавьте первый проект или загрузите существующий файл</p>
+                <div class="flex items-center justify-center gap-3">
+                    <button onclick="loadFromFile()" class="px-4 py-2 text-sm font-medium text-corporate-600 bg-white border border-corporate-200 rounded-lg hover:bg-corporate-50">
+                        <i class="fas fa-folder-open mr-2"></i>Загрузить файл
+                    </button>
+                    <button onclick="addProject()" class="px-4 py-2 text-sm font-medium text-white bg-success-600 rounded-lg hover:bg-success-700">
+                        <i class="fas fa-plus mr-2"></i>Создать проект
+                    </button>
+                </div>
+            </div>
+            
+        </main>
+        
+        <!-- Подвал -->
+        <footer class="border-t border-corporate-200 bg-white/50 mt-auto">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex items-center justify-between text-sm text-corporate-500">
+                    <p>Редактор дорожной карты</p>
+                    <a href="./index.html" class="flex items-center gap-2 text-info-600 hover:text-info-700">
+                        <i class="fas fa-chart-gantt"></i>
+                        Открыть дашборд
+                    </a>
+                </div>
+            </div>
+        </footer>
+        
+    </div>
+    
+    <!-- Скрытый input для загрузки файла -->
+    <input type="file" id="file-input" accept=".txt,.md,.mdd" class="hidden" onchange="handleFileUpload(event)">
+    
+    <!-- Модальное окно предпросмотра -->
+    <div id="preview-modal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closePreview()"></div>
+        <div class="absolute inset-4 md:inset-10 bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-corporate-200">
+                <h3 class="text-lg font-semibold text-corporate-900">Предпросмотр data.txt</h3>
+                <button onclick="closePreview()" class="p-2 hover:bg-corporate-100 rounded-lg transition-colors">
+                    <i class="fas fa-times text-corporate-500"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-auto p-6">
+                <pre id="preview-content" class="text-sm font-mono text-corporate-700 whitespace-pre-wrap"></pre>
+            </div>
+            <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-corporate-200">
+                <button onclick="closePreview()" class="px-4 py-2 text-sm font-medium text-corporate-600 bg-white border border-corporate-200 rounded-lg hover:bg-corporate-50">
+                    Закрыть
+                </button>
+                <button onclick="copyToClipboard()" class="px-4 py-2 text-sm font-medium text-white bg-corporate-700 rounded-lg hover:bg-corporate-800">
+                    <i class="fas fa-copy mr-2"></i>Копировать
+                </button>
+                <button onclick="downloadFile(); closePreview();" class="px-4 py-2 text-sm font-medium text-white bg-info-600 rounded-lg hover:bg-info-700">
+                    <i class="fas fa-download mr-2"></i>Скачать
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ================================
+        // Состояние
+        // ================================
+        let projects = [];
+        
+        // ================================
+        // Инициализация
+        // ================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Пробуем загрузить data.txt автоматически
+            tryLoadDataFile();
+        });
+        
+        async function tryLoadDataFile() {
+            try {
+                const response = await fetch('./data.txt', { cache: 'no-cache' });
+                if (response.ok) {
+                    const text = await response.text();
+                    if (!text.trim().toLowerCase().startsWith('<!doctype') && !text.trim().toLowerCase().startsWith('<html')) {
+                        parseMarkdown(text);
+                        renderProjects();
+                    }
+                }
+            } catch (e) {
+                console.log('Не удалось загрузить data.txt автоматически');
+            }
+            renderProjects();
+        }
+        
+        // ================================
+        // Парсер Markdown
+        // ================================
+        function parseMarkdown(markdown) {
+            projects = [];
+            const normalizedMarkdown = markdown.trimStart();
+            const projectBlocks = normalizedMarkdown.split(/(?=^# )/m).filter(block => block.trim());
+            
+            for (const block of projectBlocks) {
+                const project = parseProjectBlock(block);
+                if (project) {
+                    projects.push(project);
+                }
+            }
+        }
+        
+        function parseProjectBlock(block) {
+            const nameMatch = block.match(/^#\s+(.+)$/m);
+            if (!nameMatch) return null;
+            
+            const name = nameMatch[1].trim();
+            
+            const metaMatch = block.match(/^>\s*Start:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*End:\s*(\d{4}-\d{2}-\d{2})/m);
+            if (!metaMatch) return null;
+            
+            const startDate = metaMatch[1];
+            const endDate = metaMatch[2];
+            
+            const milestones = parseMilestoneTable(block);
+            
+            return {
+                id: generateId(),
+                name,
+                startDate,
+                endDate,
+                milestones
+            };
+        }
+        
+        function parseMilestoneTable(block) {
+            const milestones = [];
+            const lines = block.split('\n');
+            
+            let inTable = false;
+            let headerPassed = false;
+            
+            for (const line of lines) {
+                const trimmed = line.trim();
+                
+                if (trimmed.startsWith('|') && (trimmed.toLowerCase().includes('milestone') || trimmed.toLowerCase().includes('этап'))) {
+                    inTable = true;
+                    continue;
+                }
+                
+                if (inTable && trimmed.match(/^\|[\s:-]+\|/)) {
+                    headerPassed = true;
+                    continue;
+                }
+                
+                if (inTable && headerPassed && trimmed.startsWith('|')) {
+                    const cells = trimmed.split('|').map(c => c.trim()).filter(c => c);
+                    if (cells.length >= 3) {
+                        milestones.push({
+                            id: generateId(),
+                            name: cells[0],
+                            date: cells[1],
+                            status: cells[2]
+                        });
+                    }
+                }
+                
+                if (inTable && headerPassed && !trimmed.startsWith('|') && trimmed !== '') {
+                    break;
+                }
+            }
+            
+            return milestones;
+        }
+        
+        function generateId() {
+            return 'id_' + Math.random().toString(36).substr(2, 9);
+        }
+        
+        // ================================
+        // Генерация Markdown
+        // ================================
+        function generateMarkdown() {
+            let markdown = '';
+            
+            for (let i = 0; i < projects.length; i++) {
+                const p = projects[i];
+                
+                markdown += `# ${p.name}\n`;
+                markdown += `> Start: ${p.startDate} | End: ${p.endDate}\n\n`;
+                markdown += `| Milestone | Date | Status |\n`;
+                markdown += `| :--- | :--- | :--- |\n`;
+                
+                for (const m of p.milestones) {
+                    markdown += `| ${m.name} | ${m.date} | ${m.status} |\n`;
+                }
+                
+                if (i < projects.length - 1) {
+                    markdown += '\n';
+                }
+            }
+            
+            return markdown;
+        }
+        
+        // ================================
+        // Рендеринг
+        // ================================
+        function renderProjects() {
+            const container = document.getElementById('projects-container');
+            const emptyState = document.getElementById('empty-state');
+            const countEl = document.getElementById('project-count');
+            
+            countEl.textContent = `${projects.length} ${pluralize(projects.length, 'проект', 'проекта', 'проектов')}`;
+            
+            if (projects.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            container.innerHTML = projects.map((project, index) => `
+                <div class="project-card bg-white rounded-2xl border border-corporate-200 overflow-hidden" data-id="${project.id}">
+                    
+                    <!-- Заголовок проекта -->
+                    <div class="px-6 py-4 bg-corporate-50 border-b border-corporate-200">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-1">
+                                <input type="text" 
+                                       value="${escapeHtml(project.name)}" 
+                                       onchange="updateProjectName('${project.id}', this.value)"
+                                       class="text-lg font-semibold text-corporate-900 bg-transparent border-0 border-b-2 border-transparent hover:border-corporate-300 focus:border-info-500 w-full px-0 py-1 transition-colors"
+                                       placeholder="Название проекта">
+                                
+                                <div class="flex items-center gap-4 mt-3">
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-xs text-corporate-500 font-medium">Начало:</label>
+                                        <input type="date" 
+                                               value="${project.startDate}" 
+                                               onchange="updateProjectDate('${project.id}', 'startDate', this.value)"
+                                               class="text-sm text-corporate-700 bg-white border border-corporate-200 rounded-lg px-3 py-1.5 hover:border-corporate-300 focus:border-info-500">
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-xs text-corporate-500 font-medium">Конец:</label>
+                                        <input type="date" 
+                                               value="${project.endDate}" 
+                                               onchange="updateProjectDate('${project.id}', 'endDate', this.value)"
+                                               class="text-sm text-corporate-700 bg-white border border-corporate-200 rounded-lg px-3 py-1.5 hover:border-corporate-300 focus:border-info-500">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <button onclick="moveProject('${project.id}', -1)" ${index === 0 ? 'disabled' : ''} 
+                                        class="p-2 text-corporate-400 hover:text-corporate-600 hover:bg-white rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                                    <i class="fas fa-chevron-up"></i>
+                                </button>
+                                <button onclick="moveProject('${project.id}', 1)" ${index === projects.length - 1 ? 'disabled' : ''} 
+                                        class="p-2 text-corporate-400 hover:text-corporate-600 hover:bg-white rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                                <button onclick="deleteProject('${project.id}')" 
+                                        class="p-2 text-danger-500 hover:text-danger-600 hover:bg-danger-50 rounded-lg transition-colors">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Таблица этапов -->
+                    <div class="px-6 py-4">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-corporate-200">
+                                    <th class="text-left text-xs font-semibold text-corporate-400 uppercase tracking-wider py-2 w-1/2">Этап</th>
+                                    <th class="text-left text-xs font-semibold text-corporate-400 uppercase tracking-wider py-2 w-1/4">Дата</th>
+                                    <th class="text-left text-xs font-semibold text-corporate-400 uppercase tracking-wider py-2 w-1/5">Статус</th>
+                                    <th class="w-10"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="milestones-${project.id}">
+                                ${project.milestones.map((m, mIndex) => renderMilestoneRow(project.id, m, mIndex, project.milestones.length)).join('')}
+                            </tbody>
+                        </table>
+                        
+                        <button onclick="addMilestone('${project.id}')" 
+                                class="mt-4 w-full py-2 text-sm font-medium text-corporate-500 border border-dashed border-corporate-300 rounded-lg hover:border-corporate-400 hover:text-corporate-600 hover:bg-corporate-50 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Добавить этап
+                        </button>
+                    </div>
+                    
+                </div>
+            `).join('');
+        }
+        
+        function renderMilestoneRow(projectId, milestone, index, total) {
+            const statusClass = milestone.status === 'Done' ? 'status-done' : 
+                               milestone.status === 'In Progress' ? 'status-progress' : 'status-pending';
+            
+            return `
+                <tr class="milestone-row border-b border-corporate-100 last:border-0" data-id="${milestone.id}">
+                    <td class="py-2 pr-3">
+                        <input type="text" 
+                               value="${escapeHtml(milestone.name)}" 
+                               onchange="updateMilestone('${projectId}', '${milestone.id}', 'name', this.value)"
+                               class="w-full text-sm text-corporate-700 bg-transparent border-0 border-b border-transparent hover:border-corporate-300 focus:border-info-500 px-0 py-1"
+                               placeholder="Название этапа">
+                    </td>
+                    <td class="py-2 pr-3">
+                        <input type="date" 
+                               value="${milestone.date}" 
+                               onchange="updateMilestone('${projectId}', '${milestone.id}', 'date', this.value)"
+                               class="text-sm text-corporate-600 bg-white border border-corporate-200 rounded px-2 py-1 hover:border-corporate-300 focus:border-info-500">
+                    </td>
+                    <td class="py-2 pr-3">
+                        <select onchange="updateMilestone('${projectId}', '${milestone.id}', 'status', this.value)"
+                                class="text-sm font-medium border rounded-full px-3 py-1 cursor-pointer ${statusClass}">
+                            <option value="Pending" ${milestone.status === 'Pending' ? 'selected' : ''}>Ожидает</option>
+                            <option value="In Progress" ${milestone.status === 'In Progress' ? 'selected' : ''}>В работе</option>
+                            <option value="Done" ${milestone.status === 'Done' ? 'selected' : ''}>Готово</option>
+                        </select>
+                    </td>
+                    <td class="py-2 text-right">
+                        <div class="flex items-center gap-1">
+                            <button onclick="moveMilestone('${projectId}', '${milestone.id}', -1)" ${index === 0 ? 'disabled' : ''}
+                                    class="p-1 text-corporate-400 hover:text-corporate-600 rounded disabled:opacity-30 disabled:cursor-not-allowed">
+                                <i class="fas fa-chevron-up text-xs"></i>
+                            </button>
+                            <button onclick="moveMilestone('${projectId}', '${milestone.id}', 1)" ${index === total - 1 ? 'disabled' : ''}
+                                    class="p-1 text-corporate-400 hover:text-corporate-600 rounded disabled:opacity-30 disabled:cursor-not-allowed">
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+                            <button onclick="deleteMilestone('${projectId}', '${milestone.id}')" 
+                                    class="p-1 text-danger-400 hover:text-danger-600 rounded">
+                                <i class="fas fa-times text-xs"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+        
+        // ================================
+        // Операции с проектами
+        // ================================
+        function addProject() {
+            const today = new Date().toISOString().split('T')[0];
+            const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            
+            projects.push({
+                id: generateId(),
+                name: 'Новый проект',
+                startDate: today,
+                endDate: endDate,
+                milestones: [
+                    { id: generateId(), name: 'Этап 1', date: today, status: 'Pending' }
+                ]
+            });
+            
+            renderProjects();
+            
+            // Скролл к новому проекту
+            setTimeout(() => {
+                const container = document.getElementById('projects-container');
+                const lastCard = container.lastElementChild;
+                if (lastCard) {
+                    lastCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const input = lastCard.querySelector('input[type="text"]');
+                    if (input) {
+                        input.focus();
+                        input.select();
+                    }
+                }
+            }, 100);
+        }
+        
+        function updateProjectName(projectId, value) {
+            const project = projects.find(p => p.id === projectId);
+            if (project) {
+                project.name = value;
+            }
+        }
+        
+        function updateProjectDate(projectId, field, value) {
+            const project = projects.find(p => p.id === projectId);
+            if (project) {
+                project[field] = value;
+            }
+        }
+        
+        function moveProject(projectId, direction) {
+            const index = projects.findIndex(p => p.id === projectId);
+            if (index === -1) return;
+            
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= projects.length) return;
+            
+            [projects[index], projects[newIndex]] = [projects[newIndex], projects[index]];
+            renderProjects();
+        }
+        
+        function deleteProject(projectId) {
+            if (!confirm('Удалить проект со всеми этапами?')) return;
+            
+            projects = projects.filter(p => p.id !== projectId);
+            renderProjects();
+        }
+        
+        // ================================
+        // Операции с этапами
+        // ================================
+        function addMilestone(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+            
+            const lastMilestone = project.milestones[project.milestones.length - 1];
+            const newDate = lastMilestone ? 
+                new Date(new Date(lastMilestone.date).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] :
+                project.startDate;
+            
+            project.milestones.push({
+                id: generateId(),
+                name: 'Новый этап',
+                date: newDate,
+                status: 'Pending'
+            });
+            
+            renderProjects();
+        }
+        
+        function updateMilestone(projectId, milestoneId, field, value) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+            
+            const milestone = project.milestones.find(m => m.id === milestoneId);
+            if (milestone) {
+                milestone[field] = value;
+                
+                // Обновляем стиль селекта статуса
+                if (field === 'status') {
+                    renderProjects();
+                }
+            }
+        }
+        
+        function moveMilestone(projectId, milestoneId, direction) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+            
+            const index = project.milestones.findIndex(m => m.id === milestoneId);
+            if (index === -1) return;
+            
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= project.milestones.length) return;
+            
+            [project.milestones[index], project.milestones[newIndex]] = 
+                [project.milestones[newIndex], project.milestones[index]];
+            renderProjects();
+        }
+        
+        function deleteMilestone(projectId, milestoneId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+            
+            project.milestones = project.milestones.filter(m => m.id !== milestoneId);
+            renderProjects();
+        }
+        
+        // ================================
+        // Файловые операции
+        // ================================
+        function loadFromFile() {
+            document.getElementById('file-input').click();
+        }
+        
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                parseMarkdown(e.target.result);
+                renderProjects();
+            };
+            reader.readAsText(file);
+            
+            // Сброс input для повторной загрузки того же файла
+            event.target.value = '';
+        }
+        
+        function downloadFile() {
+            const markdown = generateMarkdown();
+            const blob = new Blob([markdown], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'data.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function showPreview() {
+            const markdown = generateMarkdown();
+            document.getElementById('preview-content').textContent = markdown;
+            document.getElementById('preview-modal').classList.remove('hidden');
+        }
+        
+        function closePreview() {
+            document.getElementById('preview-modal').classList.add('hidden');
+        }
+        
+        function copyToClipboard() {
+            const markdown = generateMarkdown();
+            navigator.clipboard.writeText(markdown).then(() => {
+                alert('Скопировано в буфер обмена!');
+            });
+        }
+        
+        // ================================
+        // Утилиты
+        // ================================
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function pluralize(n, one, few, many) {
+            const mod10 = n % 10;
+            const mod100 = n % 100;
+            
+            if (mod100 >= 11 && mod100 <= 19) return many;
+            if (mod10 === 1) return one;
+            if (mod10 >= 2 && mod10 <= 4) return few;
+            return many;
+        }
+    </script>
+    
+</body>
+</html>
