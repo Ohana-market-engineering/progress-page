@@ -316,6 +316,18 @@
         // ================================
         // GitHub API
         // ================================
+        
+        // Функции для корректной работы с UTF-8 и Base64
+        function utf8ToBase64(str) {
+            return btoa(unescape(encodeURIComponent(str)));
+        }
+        
+        function base64ToUtf8(base64) {
+            // GitHub возвращает base64 с переносами строк, убираем их
+            const cleanBase64 = base64.replace(/\n/g, '');
+            return decodeURIComponent(escape(atob(cleanBase64)));
+        }
+        
         async function loadFromGitHub() {
             if (!githubConfig.token) return;
             
@@ -331,7 +343,7 @@
                 if (response.ok) {
                     const data = await response.json();
                     fileSha = data.sha;
-                    const content = atob(data.content);
+                    const content = base64ToUtf8(data.content);
                     parseMarkdown(content);
                     renderProjects();
                     showToast('Данные загружены с GitHub', 'success');
@@ -355,7 +367,7 @@
             
             try {
                 const markdown = generateMarkdown();
-                const content = btoa(unescape(encodeURIComponent(markdown))); // Base64 encode with UTF-8 support
+                const content = utf8ToBase64(markdown);
                 
                 // Получаем текущий SHA если его нет
                 if (!fileSha) {
