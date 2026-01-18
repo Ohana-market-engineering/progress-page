@@ -44,8 +44,6 @@
         .project-card:hover { box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); }
         .milestone-row { transition: background 0.15s ease; }
         .milestone-row:hover { background: #f8fafc; }
-        .drag-handle { cursor: grab; }
-        .drag-handle:active { cursor: grabbing; }
         .modal-overlay {
             background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(4px);
@@ -60,10 +58,15 @@
         .status-done { background: #ecfdf5; color: #047857; border-color: #d1fae5; }
         .status-progress { background: #fffbeb; color: #b45309; border-color: #fef3c7; }
         .status-pending { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
-        textarea:focus, input:focus, select:focus {
-            outline: none;
-            ring: 2px;
-            ring-color: #3b82f6;
+        .save-indicator {
+            transition: all 0.3s ease;
+        }
+        .save-indicator.saving {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
     </style>
 </head>
@@ -85,16 +88,29 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button onclick="loadFromFile()" class="px-4 py-2 text-sm font-medium text-corporate-600 bg-white border border-corporate-200 rounded-lg hover:bg-corporate-50 transition-colors">
+                        <button onclick="openSettings()" class="p-2 text-corporate-500 hover:text-corporate-700 hover:bg-corporate-100 rounded-lg transition-colors" title="Настройки GitHub">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <button onclick="loadFromFile()" class="px-3 py-2 text-sm font-medium text-corporate-600 bg-white border border-corporate-200 rounded-lg hover:bg-corporate-50 transition-colors">
                             <i class="fas fa-folder-open mr-2"></i>Загрузить
                         </button>
-                        <button onclick="downloadFile()" class="px-4 py-2 text-sm font-medium text-white bg-info-600 rounded-lg hover:bg-info-700 transition-colors">
-                            <i class="fas fa-download mr-2"></i>Скачать data.txt
+                        <button onclick="downloadFile()" class="px-3 py-2 text-sm font-medium text-corporate-600 bg-white border border-corporate-200 rounded-lg hover:bg-corporate-50 transition-colors">
+                            <i class="fas fa-download mr-2"></i>Скачать
+                        </button>
+                        <button id="save-btn" onclick="saveToGitHub()" class="px-4 py-2 text-sm font-medium text-white bg-success-600 rounded-lg hover:bg-success-700 transition-colors flex items-center gap-2">
+                            <i class="fas fa-cloud-arrow-up"></i>
+                            <span>Сохранить</span>
                         </button>
                     </div>
                 </div>
             </div>
         </header>
+        
+        <!-- Статус подключения -->
+        <div id="connection-status" class="bg-warning-50 border-b border-warning-200 px-4 py-2 text-center text-sm text-warning-700">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            GitHub токен не настроен. <button onclick="openSettings()" class="underline font-medium hover:text-warning-800">Настроить</button>
+        </div>
         
         <!-- Основной контент -->
         <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
@@ -103,6 +119,7 @@
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-4">
                     <span id="project-count" class="text-sm text-corporate-500">0 проектов</span>
+                    <span id="save-status" class="text-sm text-corporate-400 hidden"></span>
                 </div>
                 <button onclick="addProject()" class="px-4 py-2 text-sm font-medium text-white bg-success-600 rounded-lg hover:bg-success-700 transition-colors">
                     <i class="fas fa-plus mr-2"></i>Добавить проект
@@ -111,7 +128,6 @@
             
             <!-- Список проектов -->
             <div id="projects-container" class="space-y-6">
-                <!-- Проекты будут здесь -->
             </div>
             
             <!-- Пустое состояние -->
@@ -151,34 +167,92 @@
     <!-- Скрытый input для загрузки файла -->
     <input type="file" id="file-input" accept=".txt,.md,.mdd" class="hidden" onchange="handleFileUpload(event)">
     
-    <!-- Модальное окно предпросмотра -->
-    <div id="preview-modal" class="fixed inset-0 z-50 hidden">
-        <div class="modal-overlay absolute inset-0" onclick="closePreview()"></div>
-        <div class="absolute inset-4 md:inset-10 bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+    <!-- Модальное окно настроек -->
+    <div id="settings-modal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeSettings()"></div>
+        <div class="absolute inset-x-4 top-[10%] md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
             <div class="flex items-center justify-between px-6 py-4 border-b border-corporate-200">
-                <h3 class="text-lg font-semibold text-corporate-900">Предпросмотр data.txt</h3>
-                <button onclick="closePreview()" class="p-2 hover:bg-corporate-100 rounded-lg transition-colors">
+                <h3 class="text-lg font-semibold text-corporate-900">Настройки GitHub</h3>
+                <button onclick="closeSettings()" class="p-2 hover:bg-corporate-100 rounded-lg transition-colors">
                     <i class="fas fa-times text-corporate-500"></i>
                 </button>
             </div>
-            <div class="flex-1 overflow-auto p-6">
-                <pre id="preview-content" class="text-sm font-mono text-corporate-700 whitespace-pre-wrap"></pre>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-corporate-700 mb-2">Personal Access Token</label>
+                    <input type="password" id="github-token" 
+                           class="w-full px-4 py-2.5 border border-corporate-200 rounded-lg focus:ring-2 focus:ring-info-500 focus:border-info-500"
+                           placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+                    <p class="mt-2 text-xs text-corporate-500">
+                        <a href="https://github.com/settings/tokens/new?scopes=repo&description=Progress%20Page%20Editor" target="_blank" class="text-info-600 hover:underline">
+                            Создать токен →
+                        </a>
+                        (нужны права <code class="bg-corporate-100 px-1 rounded">repo</code>)
+                    </p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-corporate-700 mb-2">Владелец / Организация</label>
+                        <input type="text" id="github-owner" 
+                               class="w-full px-4 py-2.5 border border-corporate-200 rounded-lg focus:ring-2 focus:ring-info-500 focus:border-info-500"
+                               placeholder="Ohana-market-engineering">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-corporate-700 mb-2">Репозиторий</label>
+                        <input type="text" id="github-repo" 
+                               class="w-full px-4 py-2.5 border border-corporate-200 rounded-lg focus:ring-2 focus:ring-info-500 focus:border-info-500"
+                               placeholder="progress-page">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-corporate-700 mb-2">Путь к файлу</label>
+                    <input type="text" id="github-path" 
+                           class="w-full px-4 py-2.5 border border-corporate-200 rounded-lg focus:ring-2 focus:ring-info-500 focus:border-info-500"
+                           placeholder="data.txt">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-corporate-700 mb-2">Ветка</label>
+                    <input type="text" id="github-branch" 
+                           class="w-full px-4 py-2.5 border border-corporate-200 rounded-lg focus:ring-2 focus:ring-info-500 focus:border-info-500"
+                           placeholder="main">
+                </div>
             </div>
-            <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-corporate-200">
-                <button onclick="closePreview()" class="px-4 py-2 text-sm font-medium text-corporate-600 bg-white border border-corporate-200 rounded-lg hover:bg-corporate-50">
-                    Закрыть
+            <div class="flex items-center justify-between px-6 py-4 border-t border-corporate-200 bg-corporate-50">
+                <button onclick="testConnection()" class="px-4 py-2 text-sm font-medium text-corporate-600 hover:text-corporate-800">
+                    <i class="fas fa-plug mr-2"></i>Проверить подключение
                 </button>
-                <button onclick="copyToClipboard()" class="px-4 py-2 text-sm font-medium text-white bg-corporate-700 rounded-lg hover:bg-corporate-800">
-                    <i class="fas fa-copy mr-2"></i>Копировать
-                </button>
-                <button onclick="downloadFile(); closePreview();" class="px-4 py-2 text-sm font-medium text-white bg-info-600 rounded-lg hover:bg-info-700">
-                    <i class="fas fa-download mr-2"></i>Скачать
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="closeSettings()" class="px-4 py-2 text-sm font-medium text-corporate-600 bg-white border border-corporate-200 rounded-lg hover:bg-corporate-50">
+                        Отмена
+                    </button>
+                    <button onclick="saveSettings()" class="px-4 py-2 text-sm font-medium text-white bg-info-600 rounded-lg hover:bg-info-700">
+                        Сохранить
+                    </button>
+                </div>
             </div>
         </div>
     </div>
     
+    <!-- Toast уведомления -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+    
     <script>
+        // ================================
+        // Конфигурация GitHub
+        // ================================
+        const GITHUB_CONFIG_KEY = 'github_editor_config';
+        let githubConfig = {
+            token: '',
+            owner: 'Ohana-market-engineering',
+            repo: 'progress-page',
+            path: 'data.txt',
+            branch: 'main'
+        };
+        let fileSha = null; // SHA текущего файла для обновления
+        
         // ================================
         // Состояние
         // ================================
@@ -188,24 +262,221 @@
         // Инициализация
         // ================================
         document.addEventListener('DOMContentLoaded', () => {
-            // Пробуем загрузить data.txt автоматически
+            loadGitHubConfig();
+            updateConnectionStatus();
             tryLoadDataFile();
         });
         
+        function loadGitHubConfig() {
+            const saved = localStorage.getItem(GITHUB_CONFIG_KEY);
+            if (saved) {
+                try {
+                    githubConfig = { ...githubConfig, ...JSON.parse(saved) };
+                } catch (e) {}
+            }
+        }
+        
+        function saveGitHubConfig() {
+            localStorage.setItem(GITHUB_CONFIG_KEY, JSON.stringify(githubConfig));
+        }
+        
+        function updateConnectionStatus() {
+            const statusEl = document.getElementById('connection-status');
+            if (githubConfig.token) {
+                statusEl.innerHTML = `<i class="fas fa-check-circle mr-2 text-success-600"></i>
+                    <span class="text-success-700">Подключено к ${githubConfig.owner}/${githubConfig.repo}</span>`;
+                statusEl.className = 'bg-success-50 border-b border-success-200 px-4 py-2 text-center text-sm';
+            } else {
+                statusEl.innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i>
+                    GitHub токен не настроен. <button onclick="openSettings()" class="underline font-medium hover:text-warning-800">Настроить</button>`;
+                statusEl.className = 'bg-warning-50 border-b border-warning-200 px-4 py-2 text-center text-sm text-warning-700';
+            }
+        }
+        
         async function tryLoadDataFile() {
+            // Сначала пробуем загрузить локально
             try {
                 const response = await fetch('./data.txt', { cache: 'no-cache' });
                 if (response.ok) {
                     const text = await response.text();
                     if (!text.trim().toLowerCase().startsWith('<!doctype') && !text.trim().toLowerCase().startsWith('<html')) {
                         parseMarkdown(text);
-                        renderProjects();
                     }
                 }
-            } catch (e) {
-                console.log('Не удалось загрузить data.txt автоматически');
+            } catch (e) {}
+            
+            // Если есть токен, загружаем с GitHub (чтобы получить SHA)
+            if (githubConfig.token) {
+                await loadFromGitHub();
             }
+            
             renderProjects();
+        }
+        
+        // ================================
+        // GitHub API
+        // ================================
+        async function loadFromGitHub() {
+            if (!githubConfig.token) return;
+            
+            try {
+                const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.path}?ref=${githubConfig.branch}`;
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    fileSha = data.sha;
+                    const content = atob(data.content);
+                    parseMarkdown(content);
+                    renderProjects();
+                    showToast('Данные загружены с GitHub', 'success');
+                }
+            } catch (error) {
+                console.error('GitHub load error:', error);
+            }
+        }
+        
+        async function saveToGitHub() {
+            if (!githubConfig.token) {
+                openSettings();
+                showToast('Сначала настройте GitHub токен', 'warning');
+                return;
+            }
+            
+            const saveBtn = document.getElementById('save-btn');
+            const originalContent = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Сохранение...</span>';
+            saveBtn.disabled = true;
+            
+            try {
+                const markdown = generateMarkdown();
+                const content = btoa(unescape(encodeURIComponent(markdown))); // Base64 encode with UTF-8 support
+                
+                // Получаем текущий SHA если его нет
+                if (!fileSha) {
+                    const getUrl = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.path}?ref=${githubConfig.branch}`;
+                    const getResponse = await fetch(getUrl, {
+                        headers: {
+                            'Authorization': `Bearer ${githubConfig.token}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    });
+                    if (getResponse.ok) {
+                        const getData = await getResponse.json();
+                        fileSha = getData.sha;
+                    }
+                }
+                
+                const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.path}`;
+                const body = {
+                    message: `Обновление дорожной карты ${new Date().toLocaleString('ru-RU')}`,
+                    content: content,
+                    branch: githubConfig.branch
+                };
+                
+                if (fileSha) {
+                    body.sha = fileSha;
+                }
+                
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    fileSha = data.content.sha;
+                    showToast('Сохранено в GitHub!', 'success');
+                    updateSaveStatus('Сохранено ' + new Date().toLocaleTimeString('ru-RU'));
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Ошибка сохранения');
+                }
+                
+            } catch (error) {
+                console.error('GitHub save error:', error);
+                showToast('Ошибка: ' + error.message, 'error');
+            } finally {
+                saveBtn.innerHTML = originalContent;
+                saveBtn.disabled = false;
+            }
+        }
+        
+        async function testConnection() {
+            const token = document.getElementById('github-token').value;
+            const owner = document.getElementById('github-owner').value;
+            const repo = document.getElementById('github-repo').value;
+            
+            if (!token || !owner || !repo) {
+                showToast('Заполните все поля', 'warning');
+                return;
+            }
+            
+            try {
+                const url = `https://api.github.com/repos/${owner}/${repo}`;
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (response.ok) {
+                    showToast('Подключение успешно!', 'success');
+                } else if (response.status === 401) {
+                    showToast('Неверный токен', 'error');
+                } else if (response.status === 404) {
+                    showToast('Репозиторий не найден', 'error');
+                } else {
+                    showToast('Ошибка подключения', 'error');
+                }
+            } catch (error) {
+                showToast('Ошибка сети', 'error');
+            }
+        }
+        
+        // ================================
+        // Настройки
+        // ================================
+        function openSettings() {
+            document.getElementById('github-token').value = githubConfig.token;
+            document.getElementById('github-owner').value = githubConfig.owner;
+            document.getElementById('github-repo').value = githubConfig.repo;
+            document.getElementById('github-path').value = githubConfig.path;
+            document.getElementById('github-branch').value = githubConfig.branch;
+            document.getElementById('settings-modal').classList.remove('hidden');
+        }
+        
+        function closeSettings() {
+            document.getElementById('settings-modal').classList.add('hidden');
+        }
+        
+        function saveSettings() {
+            githubConfig.token = document.getElementById('github-token').value.trim();
+            githubConfig.owner = document.getElementById('github-owner').value.trim();
+            githubConfig.repo = document.getElementById('github-repo').value.trim();
+            githubConfig.path = document.getElementById('github-path').value.trim();
+            githubConfig.branch = document.getElementById('github-branch').value.trim();
+            
+            saveGitHubConfig();
+            updateConnectionStatus();
+            closeSettings();
+            
+            if (githubConfig.token) {
+                loadFromGitHub();
+            }
+            
+            showToast('Настройки сохранены', 'success');
         }
         
         // ================================
@@ -475,7 +746,6 @@
             
             renderProjects();
             
-            // Скролл к новому проекту
             setTimeout(() => {
                 const container = document.getElementById('projects-container');
                 const lastCard = container.lastElementChild;
@@ -492,16 +762,12 @@
         
         function updateProjectName(projectId, value) {
             const project = projects.find(p => p.id === projectId);
-            if (project) {
-                project.name = value;
-            }
+            if (project) project.name = value;
         }
         
         function updateProjectDate(projectId, field, value) {
             const project = projects.find(p => p.id === projectId);
-            if (project) {
-                project[field] = value;
-            }
+            if (project) project[field] = value;
         }
         
         function moveProject(projectId, direction) {
@@ -517,7 +783,6 @@
         
         function deleteProject(projectId) {
             if (!confirm('Удалить проект со всеми этапами?')) return;
-            
             projects = projects.filter(p => p.id !== projectId);
             renderProjects();
         }
@@ -551,11 +816,7 @@
             const milestone = project.milestones.find(m => m.id === milestoneId);
             if (milestone) {
                 milestone[field] = value;
-                
-                // Обновляем стиль селекта статуса
-                if (field === 'status') {
-                    renderProjects();
-                }
+                if (field === 'status') renderProjects();
             }
         }
         
@@ -597,10 +858,9 @@
             reader.onload = (e) => {
                 parseMarkdown(e.target.result);
                 renderProjects();
+                showToast('Файл загружен', 'success');
             };
             reader.readAsText(file);
-            
-            // Сброс input для повторной загрузки того же файла
             event.target.value = '';
         }
         
@@ -618,26 +878,43 @@
             URL.revokeObjectURL(url);
         }
         
-        function showPreview() {
-            const markdown = generateMarkdown();
-            document.getElementById('preview-content').textContent = markdown;
-            document.getElementById('preview-modal').classList.remove('hidden');
-        }
-        
-        function closePreview() {
-            document.getElementById('preview-modal').classList.add('hidden');
-        }
-        
-        function copyToClipboard() {
-            const markdown = generateMarkdown();
-            navigator.clipboard.writeText(markdown).then(() => {
-                alert('Скопировано в буфер обмена!');
-            });
-        }
-        
         // ================================
-        // Утилиты
+        // UI Helpers
         // ================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const colors = {
+                success: 'bg-success-600',
+                error: 'bg-danger-600',
+                warning: 'bg-warning-600',
+                info: 'bg-info-600'
+            };
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+            
+            const toast = document.createElement('div');
+            toast.className = `${colors[type]} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 transform translate-x-full transition-transform duration-300`;
+            toast.innerHTML = `<i class="fas ${icons[type]}"></i><span>${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => toast.classList.remove('translate-x-full'), 10);
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        function updateSaveStatus(text) {
+            const el = document.getElementById('save-status');
+            el.textContent = text;
+            el.classList.remove('hidden');
+        }
+        
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
@@ -647,7 +924,6 @@
         function pluralize(n, one, few, many) {
             const mod10 = n % 10;
             const mod100 = n % 100;
-            
             if (mod100 >= 11 && mod100 <= 19) return many;
             if (mod10 === 1) return one;
             if (mod10 >= 2 && mod10 <= 4) return few;
