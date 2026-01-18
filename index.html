@@ -133,6 +133,17 @@
             box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
         }
         
+        /* Анимация кольца здоровья */
+        #health-ring-progress {
+            transition: stroke-dasharray 0.8s ease-in-out, stroke 0.3s ease;
+        }
+        
+        /* Подсказки */
+        [title] {
+            position: relative;
+            cursor: help;
+        }
+        
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
@@ -174,7 +185,7 @@
                             <i class="fas fa-chart-gantt text-white text-lg"></i>
                         </div>
                         <div>
-                            <h1 class="text-xl font-semibold text-corporate-900 tracking-tight">Дорожная карта ADOLF</h1>
+                            <h1 class="text-xl font-semibold text-corporate-900 tracking-tight">Дорожная карта</h1>
                             <p class="text-xs text-corporate-500 font-medium">Статус проектов</p>
                         </div>
                     </div>
@@ -258,15 +269,40 @@
                             </div>
                         </div>
                         
-                        <div class="kpi-card bg-white/70 backdrop-blur-sm rounded-xl p-5 border border-corporate-100">
-                            <div class="flex items-start justify-between">
+                        <!-- Виджет здоровья проектов -->
+                        <div class="kpi-card bg-white/70 backdrop-blur-sm rounded-xl p-5 border border-corporate-100 relative overflow-hidden">
+                            <div class="flex items-start justify-between mb-3">
                                 <div>
-                                    <p class="text-xs font-semibold text-corporate-400 uppercase tracking-wider mb-1">Средний прогресс</p>
-                                    <p id="kpi-success" class="text-3xl font-bold text-corporate-900">0%</p>
+                                    <p class="text-xs font-semibold text-corporate-400 uppercase tracking-wider mb-1">Здоровье</p>
+                                    <div class="flex items-center gap-2">
+                                        <span id="health-icon" class="text-2xl">💚</span>
+                                        <span id="health-label" class="text-lg font-bold text-success-600">Отлично</span>
+                                    </div>
                                 </div>
-                                <div class="w-10 h-10 bg-warning-50 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-chart-line text-warning-500"></i>
+                                <div id="health-score-ring" class="w-12 h-12 relative">
+                                    <svg class="w-12 h-12 transform -rotate-90" viewBox="0 0 36 36">
+                                        <path class="text-corporate-100" stroke="currentColor" stroke-width="3" fill="none"
+                                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        <path id="health-ring-progress" class="text-success-500" stroke="currentColor" stroke-width="3" fill="none"
+                                              stroke-linecap="round" stroke-dasharray="100, 100"
+                                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    </svg>
+                                    <span id="health-score-text" class="absolute inset-0 flex items-center justify-center text-xs font-bold text-corporate-700">100</span>
                                 </div>
+                            </div>
+                            <div id="health-breakdown" class="flex items-center gap-1 text-xs">
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-success-50 text-success-700" title="Опережение">
+                                    <i class="fas fa-rocket text-[10px]"></i><span id="health-ahead">0</span>
+                                </span>
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-info-50 text-info-700" title="По плану">
+                                    <i class="fas fa-check text-[10px]"></i><span id="health-ontrack">0</span>
+                                </span>
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-warning-50 text-warning-700" title="Отставание">
+                                    <i class="fas fa-clock text-[10px]"></i><span id="health-behind">0</span>
+                                </span>
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-danger-50 text-danger-700" title="Критично">
+                                    <i class="fas fa-fire text-[10px]"></i><span id="health-critical">0</span>
+                                </span>
                             </div>
                         </div>
                         
@@ -642,15 +678,107 @@
             const active = projects.filter(p => p.status === 'active').length;
             const completed = projects.filter(p => p.status === 'completed').length;
             
-            const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'queue');
-            const avgProgress = activeProjects.length > 0
-                ? Math.round(activeProjects.reduce((sum, p) => sum + p.progress, 0) / activeProjects.length)
-                : 0;
-            
             document.getElementById('kpi-total').textContent = total;
             document.getElementById('kpi-active').textContent = active;
             document.getElementById('kpi-completed').textContent = completed;
-            document.getElementById('kpi-success').textContent = `${avgProgress}%`;
+            
+            // Расчёт здоровья проектов
+            updateHealthWidget(projects);
+        }
+        
+        function calculateProjectHealth(project) {
+            // Для завершённых проектов - всегда "отлично"
+            if (project.status === 'completed') {
+                return { status: 'completed', diff: 100 };
+            }
+            
+            // Для проектов в очереди - не оцениваем
+            if (project.status === 'queue') {
+                return { status: 'queue', diff: 0 };
+            }
+            
+            const today = new Date();
+            const start = new Date(project.startDate);
+            const end = new Date(project.endDate);
+            
+            // Ожидаемый прогресс на сегодня (в процентах)
+            const totalDuration = end - start;
+            const elapsed = today - start;
+            const expectedProgress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+            
+            // Фактический прогресс
+            const actualProgress = project.progress;
+            
+            // Разница (положительная = опережение, отрицательная = отставание)
+            const diff = actualProgress - expectedProgress;
+            
+            // Определяем статус здоровья
+            if (diff >= 10) {
+                return { status: 'ahead', diff }; // Опережение
+            } else if (diff >= -10) {
+                return { status: 'ontrack', diff }; // По плану
+            } else if (diff >= -25) {
+                return { status: 'behind', diff }; // Небольшое отставание
+            } else {
+                return { status: 'critical', diff }; // Критическое отставание
+            }
+        }
+        
+        function updateHealthWidget(projects) {
+            // Считаем только активные и просроченные проекты
+            const relevantProjects = projects.filter(p => p.status === 'active' || p.status === 'delayed');
+            
+            let ahead = 0, ontrack = 0, behind = 0, critical = 0;
+            let totalScore = 0;
+            
+            for (const project of relevantProjects) {
+                const health = calculateProjectHealth(project);
+                
+                switch (health.status) {
+                    case 'ahead': ahead++; totalScore += 100; break;
+                    case 'ontrack': ontrack++; totalScore += 75; break;
+                    case 'behind': behind++; totalScore += 40; break;
+                    case 'critical': critical++; totalScore += 10; break;
+                }
+            }
+            
+            // Обновляем счётчики
+            document.getElementById('health-ahead').textContent = ahead;
+            document.getElementById('health-ontrack').textContent = ontrack;
+            document.getElementById('health-behind').textContent = behind;
+            document.getElementById('health-critical').textContent = critical;
+            
+            // Средний балл здоровья
+            const avgScore = relevantProjects.length > 0 
+                ? Math.round(totalScore / relevantProjects.length) 
+                : 100;
+            
+            // Определяем общий статус
+            let icon, label, colorClass, ringColor;
+            
+            if (relevantProjects.length === 0) {
+                icon = '✨'; label = 'Нет активных'; colorClass = 'text-corporate-500'; ringColor = 'text-corporate-400';
+            } else if (critical > 0 || avgScore < 30) {
+                icon = '🔥'; label = 'Критично'; colorClass = 'text-danger-600'; ringColor = 'text-danger-500';
+            } else if (behind > 0 || avgScore < 50) {
+                icon = '⚠️'; label = 'Внимание'; colorClass = 'text-warning-600'; ringColor = 'text-warning-500';
+            } else if (ahead > ontrack) {
+                icon = '🚀'; label = 'Опережаем'; colorClass = 'text-success-600'; ringColor = 'text-success-500';
+            } else if (avgScore >= 70) {
+                icon = '💚'; label = 'Отлично'; colorClass = 'text-success-600'; ringColor = 'text-success-500';
+            } else {
+                icon = '👍'; label = 'Хорошо'; colorClass = 'text-info-600'; ringColor = 'text-info-500';
+            }
+            
+            document.getElementById('health-icon').textContent = icon;
+            document.getElementById('health-label').textContent = label;
+            document.getElementById('health-label').className = `text-lg font-bold ${colorClass}`;
+            document.getElementById('health-score-text').textContent = avgScore;
+            
+            // Анимация кольца прогресса
+            const ring = document.getElementById('health-ring-progress');
+            ring.className = ringColor;
+            ring.style.strokeDasharray = `${avgScore}, 100`;
         }
         
         function renderFilteredProjects(filter) {
@@ -704,10 +832,7 @@
             
             try {
                 // Пробуем загрузить data.txt
-                const basePath = window.location.pathname.endsWith('/')
-                    ? window.location.pathname
-                    : window.location.pathname + '/';
-                const response = await fetch(basePath + 'data.txt', {
+                const response = await fetch('./data.txt', {
                     cache: 'no-cache'
                 });
                 
