@@ -144,3 +144,14 @@
 | Аналитика (Метрика, GTM, e-commerce) | 2026-04-14 | Pending |
 | Нагрузочное тестирование + оптимизация | 2026-04-18 | Pending |
 | E-Shop Ready | 2026-04-21 | Pending |
+
+# VPN OHANA (Корпоративный VPN)
+> Start: 2026-01-10 | End: 2026-01-19
+
+| Milestone | Date | Status |
+| :--- | :--- | :--- |
+| VPS + WireGuard установка | 2026-01-12 | Pending |
+| Конфигурация сервера + ключи | 2026-01-14 | Pending |
+| Клиентские профили + распространение | 2026-01-16 | Pending |
+| Firewall + политики доступа | 2026-01-18 | Pending |
+| VPN OHANA Ready | 2026-01-19 | Pending |
