@@ -13,7 +13,7 @@
 | Core Ready | 2026-02-28 | Pending |
 
 # Knowledge (База знаний)
-> Start: 2026-01-26 | End: 2026-03-31
+> Start: 2026-01-26 | End: 2026-03-09
 
 | Milestone | Date | Status |
 | :--- | :--- | :--- |
@@ -22,7 +22,7 @@
 | Загрузка документов в KB | 2026-02-18 | Pending |
 | Pipeline @Adolf_KB | 2026-02-23 | Pending |
 | Tools для поиска | 2026-02-27 | Pending |
-| Тестирование с пользователями | 2026-03-06 | Pending |
+| Тестирование с пользователями | 2026-03-09 | Pending |
 
 # Content Factory (Контент-фабрика)
 > Start: 2026-01-16 | End: 2026-03-31
