@@ -13,24 +13,24 @@
 | Core Ready | 2026-02-28 | Pending |
 
 # Knowledge (База знаний)
-> Start: 2026-01-12 | End: 2026-03-31
+> Start: 2026-01-26 | End: 2026-03-31
 
 | Milestone | Date | Status |
 | :--- | :--- | :--- |
-| Настройка RAG-пайплайна | 2026-03-05 | In Progress |
-| Оцифровка регламентов компании | 2026-03-12 | Pending |
-| Загрузка документов в KB | 2026-03-18 | Pending |
-| Pipeline @Adolf_KB | 2026-03-23 | Pending |
-| Tools для поиска | 2026-03-27 | Pending |
-| Тестирование с пользователями | 2026-03-31 | Pending |
+| Настройка RAG-пайплайна | 2026-02-05 | In Progress |
+| Оцифровка регламентов компании | 2026-02-12 | Pending |
+| Загрузка документов в KB | 2026-02-18 | Pending |
+| Pipeline @Adolf_KB | 2026-02-23 | Pending |
+| Tools для поиска | 2026-02-27 | Pending |
+| Тестирование с пользователями | 2026-03-06 | Pending |
 
 # Content Factory (Контент-фабрика)
-> Start: 2026-01-31 | End: 2026-03-31
+> Start: 2026-01-16 | End: 2026-03-31
 
 | Milestone | Date | Status |
 | :--- | :--- | :--- |
-| Шаблоны карточек товаров | 2026-02-10 | In Progress |
-| Генерация описаний (GPT-5 mini) | 2026-02-20 | Pending |
+| Шаблоны карточек товаров | 2026-01-26 | In Progress |
+| Генерация описаний (GPT-5 mini) | 2026-02-12 | Pending |
 | SEO-оптимизация текстов | 2026-02-25 | Pending |
 | Генерация Rich-контента | 2026-03-04 | Pending |
 | Pipeline @Adolf_Content | 2026-03-16 | Pending |
@@ -38,17 +38,17 @@
 | Тестирование | 2026-03-31 | Pending |
 
 # CFO (Финансовый директор)
-> Start: 2026-04-01 | End: 2026-04-30
+> Start: 2026-02-18 | End: 2026-03-31
 
 | Milestone | Date | Status |
 | :--- | :--- | :--- |
-| Парсинг финансовых отчётов | 2026-04-07 | Pending |
-| Mapping Barcode → Cost Price | 2026-04-12 | Pending |
-| P&L расчёт по товарам | 2026-04-17 | Pending |
-| ABC-анализ ассортимента | 2026-04-21 | Pending |
-| AI Insights (Claude Opus) | 2026-04-25 | Pending |
-| Pipeline @Adolf_CFO | 2026-04-28 | Pending |
-| Тестирование | 2026-04-30 | Pending |
+| Парсинг финансовых отчётов | 2026-02-27 | Pending |
+| Mapping Barcode → Cost Price | 2026-03-12 | Pending |
+| P&L расчёт по товарам | 2026-03-17 | Pending |
+| ABC-анализ ассортимента | 2026-03-21 | Pending |
+| AI Insights (Claude Opus) | 2026-03-25 | Pending |
+| Pipeline @Adolf_CFO | 2026-03-28 | Pending |
+| Тестирование | 2026-03-31 | Pending |
 
 # Reputation (Управление репутацией)
 > Start: 2026-05-01 | End: 2026-05-31
