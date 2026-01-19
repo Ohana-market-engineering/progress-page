@@ -145,7 +145,7 @@
 | Нагрузочное тестирование + оптимизация | 2026-04-10 | Pending |
 | E-Shop Ready | 2026-04-15 | Pending |
 
-# VPN OHANA (Корпоративный VPN)
+# VPN (Корпоративный VPN)
 > Start: 2026-01-03 | End: 2026-01-19
 
 | Milestone | Date | Status |
